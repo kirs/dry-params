@@ -10,7 +10,7 @@ into your Rails controller and provides an API to validate request parameters wi
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'dry-params'
+gem 'dry-params', github: 'kirs/dry-params'
 ```
 
 Then add `dry-params` helper to your controller:
