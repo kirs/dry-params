@@ -1,7 +1,7 @@
 # Dry::Params
 
-`Dry::Params` brings all features of [`Dry::Validation`](https://github.com/dryrb/dry-validation)
-into your Rails controller and provides an API to validate request params with `Dry::Validation`
+`Dry::Params` brings all features of [`dry-validation`](https://github.com/dryrb/dry-validation)
+into your Rails controller and provides an API to validate request parameters with `Dry::Validation`
 
 [Read more about *why* dry-validation is better then Rails Strong Params](http://solnic.eu/2015/12/07/introducing-dry-validation.html)
 
@@ -13,7 +13,7 @@ Add this line to your application's Gemfile:
 gem 'dry-params'
 ```
 
-And add dry-params helper to your controller:
+Then add `dry-params` helper to your controller:
 
 ```ruby
 # app/controllers/application_controller
@@ -31,10 +31,10 @@ Describe request parameters validation rules in controller just like with Strong
 class UsersController < ApplicationController
   def user_params
     dry_params.fetch(:user).validate do
-      key(:name) { |f| f.filled? }
-      key(:age) { |f| f.int? }
+      key(:name) { |f| f.filled? } # key should be present
+      key(:age) { |f| f.int? } # should be an integer
       key(:account_id) { |f| f.int? }
-      key(:group_ids) { |f| f.array? do
+      key(:group_ids) { |f| f.array? do # should be an array of integers
         v.each(&:int?)
       end
     end
@@ -44,7 +44,7 @@ end
 
 These rules describe a hash:
 
-```json
+```ruby
 {
   "users" =>
     {
@@ -56,7 +56,7 @@ These rules describe a hash:
 }
 ```
 
-`Dry::Params#validate` will return the following coerced and validated hash:
+`Dry::Params#validate` will return the following type-coerced and validated hash:
 
 ```ruby
 {
@@ -74,28 +74,30 @@ Dry::Params provides two validation modes: `strict` and `filter`.
 ## Strict validation
 
 This is a default validation mode.
-It checks request params to *strictly* satisfy dry-validation rules.
-If params do not satisfy, Dry::Params::ValidationError will be raised.
+It checks request params to *strictly* satisfy `dry-validation` rules.
+If params do not satisfy, `Dry::Params::ValidationError` will be raised.
 
 ## Filter validation
 
 Filter validation returns hash with only keys that pass validation rules.
 
-```
-dry_params.fetch(:user).validate do
-  key(:name) { |f| f.filled? }
-  key(:age) { |f| f.int? }
-  key(:account_id) { |f| f.int? }
-  key(:group_ids) { |f| f.array? do
-    v.each(&:int?)
-      end
+```ruby
+def user_params
+  dry_params.fetch(:user).validate do
+    key(:name) { |f| f.filled? }
+    key(:age) { |f| f.int? }
+    key(:account_id) { |f| f.int? }
+    key(:group_ids) { |f| f.array? do
+      v.each(&:int?)
+        end
+    end
   end
 end
 ```
 
 If user passes the following request parameters:
 
-```json
+```ruby
 {
   "users" =>
     {
@@ -107,11 +109,11 @@ If user passes the following request parameters:
 }
 ```
 
-`validate` will return a hash with only one valid key: `name`.
+`user_params` will return a hash with only one valid key: `name`.
 
 ```ruby
 {
-  name: "Kir",
+  name: "Kir"
 }
 ```
 
