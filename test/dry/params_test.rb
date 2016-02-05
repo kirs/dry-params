@@ -5,16 +5,8 @@ class Dry::ParamsTest < Minitest::Test
     refute_nil ::Dry::Params::VERSION
   end
 
-  def test_validate_strict_success
-    dry_params = Dry::Params.new({
-      "user" => {
-        "email" => "shatrov@me.com",
-        "age" => "21",
-        "ids" => ["1", "2", "3"]
-      }
-    })
-
-    validated = dry_params.fetch(:user).validate do
+  def user_schema_klass
+    Class.new(Dry::Validation::Schema::Form) do
       key(:email) { |email| email.filled? }
 
       key(:age) do |age|
@@ -27,6 +19,18 @@ class Dry::ParamsTest < Minitest::Test
         end
       end
     end
+  end
+
+  def test_validate_strict_success
+    dry_params = Dry::Params.new({
+      "user" => {
+        "email" => "shatrov@me.com",
+        "age" => "21",
+        "ids" => ["1", "2", "3"]
+      }
+    })
+
+    validated = dry_params.fetch(:user).validate(user_schema_klass)
 
     assert_equal validated, {:email=>"shatrov@me.com", :age=>21, :ids=>[1, 2, 3]}
   end
@@ -40,19 +44,7 @@ class Dry::ParamsTest < Minitest::Test
       }
     })
 
-    validated = dry_params.fetch(:user).validate(mode: :filter) do
-      key(:email) { |email| email.filled? }
-
-      key(:age) do |age|
-        age.int? & age.gt?(18)
-      end
-
-      key(:ids) do |v|
-        v.array? do
-          v.each(&:int?)
-        end
-      end
-    end
+    validated = dry_params.fetch(:user).validate(user_schema_klass, mode: :filter)
 
     assert_equal validated, {:email=>"shatrov@me.com", :ids=>[1, 2, 3]}
   end
@@ -67,19 +59,7 @@ class Dry::ParamsTest < Minitest::Test
     })
 
     error = assert_raises do
-      dry_params.fetch(:user).validate do
-        key(:email) { |email| email.filled? }
-
-        key(:age) do |age|
-          age.int? & age.gt?(18)
-        end
-
-        key(:ids) do |v|
-          v.array? do
-            v.each(&:int?)
-          end
-        end
-      end
+      dry_params.fetch(:user).validate(user_schema_klass)
     end
 
     assert_instance_of Dry::Params::ValidationError, error

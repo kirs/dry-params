@@ -28,16 +28,19 @@ end
 Describe request parameters validation rules in controller just like with Strong Parameters:
 
 ```ruby
+# app/schemas/user_signup_schema.rb
+class UserSignupSchema < Dry::Validation::Schema::Form
+  key(:name) { |f| f.filled? } # key should be present
+  key(:age) { |f| f.int? } # should be an integer
+  key(:account_id) { |f| f.int? }
+  key(:group_ids) { |f| f.array? do # should be an array of integers
+    v.each(&:int?)
+  end
+end
+
 class UsersController < ApplicationController
   def user_params
-    dry_params.fetch(:user).validate do
-      key(:name) { |f| f.filled? } # key should be present
-      key(:age) { |f| f.int? } # should be an integer
-      key(:account_id) { |f| f.int? }
-      key(:group_ids) { |f| f.array? do # should be an array of integers
-        v.each(&:int?)
-      end
-    end
+    dry_params.fetch(:user).validate(UserSignupSchema)
   end
 end
 ```
@@ -83,15 +86,7 @@ Filter validation returns hash with only keys that pass validation rules.
 
 ```ruby
 def user_params
-  dry_params.fetch(:user).validate do
-    key(:name) { |f| f.filled? }
-    key(:age) { |f| f.int? }
-    key(:account_id) { |f| f.int? }
-    key(:group_ids) { |f| f.array? do
-      v.each(&:int?)
-        end
-    end
-  end
+  dry_params.fetch(:user).validate(UserSignupSchema, mode: :filter)
 end
 ```
 

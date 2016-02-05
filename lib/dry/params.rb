@@ -15,14 +15,8 @@ module Dry
       self.class.new(@params.fetch(key.to_s))
     end
 
-    def validate(mode: :strict, &block)
-      # validate mode
-
-      klass = Class.new(Dry::Validation::Schema::Form) do
-        instance_eval(&block)
-      end
-
-      result = klass.new.call(@params)
+    def validate(schema_klass, mode: :strict)
+      result = schema_klass.new.call(@params)
       if mode == :strict && result.messages.size > 0
         raise ValidationError, result
       end
